@@ -72,4 +72,16 @@ class FluxAndMonoGeneratorServiceTest {
                 .verifyComplete();
         // passed unit test
     }
+
+    @Test
+    void namesFluxFlatMapAsync() {
+        // assuming i will receive the list of elements in order
+        // but it won't be ordered! IT SHOULD FAIL
+        // "aaa", "bb", "cccc"
+        var namesFluxFlatMapAsync = fluxAndMonoGeneratorService.namesFluxFlatMapAsync(1);
+        StepVerifier.create(namesFluxFlatMapAsync)
+                //.expectNext("A","A","A", "B","B","C","C","C","C") //this will fail (no order)
+                .expectNextCount(9) // since we give only expected num of elements, it will pass
+                .verifyComplete();
+    }
 }

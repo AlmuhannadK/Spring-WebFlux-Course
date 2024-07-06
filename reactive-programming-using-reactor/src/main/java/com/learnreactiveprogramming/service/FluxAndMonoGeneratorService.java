@@ -4,8 +4,10 @@ package com.learnreactiveprogramming.service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import static reactor.core.publisher.Flux.fromArray;
 
@@ -79,6 +81,30 @@ public class FluxAndMonoGeneratorService {
         return fromArray(nameArray);
     }
 
+    // ASYNC NATURE OF FLATMAP OPERATOR
+    // the flatmap operator works in async by default, so you have to keep that in mind
+    // for example, if you had a list ("aa", "bbb", "cccc")
+    // the flatmap operator will retrieve the streams of each element asynchronously
+    // and the order may be random like we might get the c's before a's and so on
+    // so keep that in mind next time you use flatmap operator and avoid it if order matters.
+    public Flux<String> namesFluxFlatMapAsync(int elementLength) {
+        return Flux.fromIterable(List.of("aaa", "bb", "cccc"))
+                .map(element -> element.toUpperCase())
+                .filter(name -> name.length() > elementLength)
+                .flatMap(name -> splitNamesWithDelay(name))
+                .log();
+    }
+
+    //async helper function (add artificial delay to showcase async)
+    public Flux<String> splitNamesWithDelay(String name) {
+
+        String[] nameArray = name.split("");
+        //random value of delay
+        var delay = new Random().nextInt(2000);
+        return fromArray(nameArray)
+                .delayElements(Duration.ofMillis(delay));
+    }
+
 
     //Mono
     public Mono<String> nameMono() {
@@ -114,8 +140,11 @@ public class FluxAndMonoGeneratorService {
                         System.out.println("Filtered name is: " + name));*/
 
         // flatmap
-        fluxAndMonoGeneratorService.namesFluxFlatMap(5).subscribe(
-                name -> System.out.println("FLATMAP OUTPUT HERE:" + name));
+        /*fluxAndMonoGeneratorService.namesFluxFlatMap(5).subscribe(
+                name -> System.out.println("FLATMAP OUTPUT HERE: " + name));*/
+
+        fluxAndMonoGeneratorService.namesFluxFlatMapAsync(1).subscribe(
+                name -> System.out.println("DELAYED FLATMAP OUTPUT HERE: " + name));
 
     }
 
