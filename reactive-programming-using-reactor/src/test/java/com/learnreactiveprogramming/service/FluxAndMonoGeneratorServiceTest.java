@@ -61,4 +61,15 @@ class FluxAndMonoGeneratorServiceTest {
                 .expectNext("4-eddy", "6-johnny", "4-jack", "7-jameson")
                 .verifyComplete();
     }
+
+    @Test
+    void namesFluxFlatMap() {
+
+        // testing for dorothy name just to see if it will pass and test in one element
+        var namesFluxFlatMap = fluxAndMonoGeneratorService.namesFluxFlatMap(5);
+        StepVerifier.create(namesFluxFlatMap)
+                .expectNext("D","O","R","O","T","H","Y")
+                .verifyComplete();
+        // passed unit test
+    }
 }
