@@ -9,11 +9,13 @@ import java.util.List;
 import java.util.Random;
 
 import static reactor.core.publisher.Flux.fromArray;
+import static reactor.core.publisher.Flux.never;
 
 public class FluxAndMonoGeneratorService {
 
 
-    // Flux
+    /* ------------------------  FLUX  -------------------------------- */
+
     public Flux<String> namesFlux() {
 
         return Flux.fromIterable(List.of("Alex", "Ben", "Caeser")) // might come from a db or a remote service call
@@ -72,6 +74,8 @@ public class FluxAndMonoGeneratorService {
 
 
     // concatMap is similar to flatMap, but it PRESERVES the order of elements unlike flatMap (keeps same order)
+    // overall time will be higher than the flatmap operator because it keeps the order and needs each element
+    // to complete before moving to the next one (trade-off, slower but keeps order intact)
     public Flux<String> namesFluxConcatMap(int elementLength) {
 
         return Flux.fromIterable(List.of("alex", "ben", "caen"))
@@ -121,13 +125,43 @@ public class FluxAndMonoGeneratorService {
 
 
 
-    /*                  --- MONO ---                  */
+    /* ------------------------  MONO  -------------------------------- */
 
     public Mono<String> nameMono() {
-        return Mono.just("Almuhannad").log();
+        return Mono.just("almuhannad")
+                .log();
+    }
+
+    public Mono<String> nameMonoWithMap(String name) {
+        return Mono.just(name)
+                .map(element -> element.toUpperCase())
+                .log();
     }
 
 
+    // flatmap in Mono
+    // used when the transformation returns a Mono
+    // for example, when you have a function that takes a String (1)  and returns a Mono<List<String>> (N)
+    public Mono<List<String>> nameMonoWithFlatMap() {
+        return Mono.just("almuhannad")
+                .map(name -> name.toUpperCase())
+                .flatMap(s -> splitStringMono(s))
+                .log();
+
+    }
+
+
+
+
+
+    // HELPER METHODS
+    public Mono<List<String>> splitStringMono(String s) {
+        var charArray = s.split("");
+        return Mono.just(List.of(charArray))
+                .delayElement(Duration.ofSeconds(1));
+    }
+
+    /* ------------------------  MAIN FUNCTION FOR CONSOLE PRINTING  -------------------------------- */
 
     public static void main(String[] args) {
 
@@ -163,9 +197,22 @@ public class FluxAndMonoGeneratorService {
                 name -> System.out.println("DELAYED FLATMAP OUTPUT HERE: " + name));*/
 
         // concatMap
-        fluxAndMonoGeneratorService.namesFluxConcatMap(2).subscribe(
+        /*fluxAndMonoGeneratorService.namesFluxConcatMap(2).subscribe(
                 name -> System.out.println("concatMap with (same order): " + name)
-        );
+        );*/
+
+       /* fluxAndMonoGeneratorService.nameMonoWithMap("alexander").subscribe(
+                name -> System.out.println("Mono with Map: " + name)
+        );*/
+
+        // resorted to blocking the thread to print the result to console
+        //The block() method is used to wait for the Mono to complete and retrieve its value.
+        // This ensures that the main method waits for the asynchronous operation to complete.
+        List<String> printResult = fluxAndMonoGeneratorService.nameMonoWithFlatMap().block();
+        if (printResult != null) {
+            printResult.forEach(System.out::println);
+        }
+
 
     }
 

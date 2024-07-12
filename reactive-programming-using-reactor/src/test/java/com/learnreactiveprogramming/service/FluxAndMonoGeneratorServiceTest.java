@@ -4,6 +4,8 @@ package com.learnreactiveprogramming.service;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
+import java.util.List;
+
 class FluxAndMonoGeneratorServiceTest {
 
 
@@ -89,11 +91,22 @@ class FluxAndMonoGeneratorServiceTest {
     void namesFluxConcatMap() {
 
         // similar to flatMap but preserves the order of stream elements
+        // here, we expect the order to remain the same, so we can use .expectNext unlike flatMap
         var namesFluxConcatMap = fluxAndMonoGeneratorService.namesFluxConcatMap(2);
         // replace e with X and split names
         StepVerifier.create(namesFluxConcatMap)
                 .expectNext("a","l","X", "x", "b", "X", "n", "c","a", "X", "n")
                 .verifyComplete();
         /*("alex", "ben", "caen", "dorothy")*/
+    }
+
+    @Test
+    void nameMonoWithFlatMap() {
+
+        var value = fluxAndMonoGeneratorService.nameMonoWithFlatMap();
+        // fixed name in method --> almuhannad
+        StepVerifier.create(value)
+                .expectNext(List.of("A","L","M","U","H","A", "N","N", "A", "D"))
+                .verifyComplete();
     }
 }
