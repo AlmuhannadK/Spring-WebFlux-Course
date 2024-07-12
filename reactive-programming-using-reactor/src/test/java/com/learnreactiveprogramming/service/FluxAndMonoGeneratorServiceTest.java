@@ -84,4 +84,16 @@ class FluxAndMonoGeneratorServiceTest {
                 .expectNextCount(9) // since we give only expected num of elements, it will pass
                 .verifyComplete();
     }
+
+    @Test
+    void namesFluxConcatMap() {
+
+        // similar to flatMap but preserves the order of stream elements
+        var namesFluxConcatMap = fluxAndMonoGeneratorService.namesFluxConcatMap(2);
+        // replace e with X and split names
+        StepVerifier.create(namesFluxConcatMap)
+                .expectNext("a","l","X", "x", "b", "X", "n", "c","a", "X", "n")
+                .verifyComplete();
+        /*("alex", "ben", "caen", "dorothy")*/
+    }
 }

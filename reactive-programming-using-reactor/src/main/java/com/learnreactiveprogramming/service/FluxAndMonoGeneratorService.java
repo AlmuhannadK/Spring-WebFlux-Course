@@ -5,7 +5,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -71,6 +70,20 @@ public class FluxAndMonoGeneratorService {
                 .log();
     }
 
+
+    // concatMap is similar to flatMap, but it PRESERVES the order of elements unlike flatMap (keeps same order)
+    public Flux<String> namesFluxConcatMap(int elementLength) {
+
+        return Flux.fromIterable(List.of("alex", "ben", "caen"))
+                .map(name -> name.replace('e', 'X'))
+                .filter(element -> element.length() > elementLength)
+                .concatMap(s -> splitNamesWithDelay(s))
+                .log();
+    }
+
+
+                    /*HELPER FUNCTIONS FOR FLUX PART*/
+
     // helper function to split string objects to return each character as a stream
     public Flux<String> splitNames(String name) {
 
@@ -106,7 +119,10 @@ public class FluxAndMonoGeneratorService {
     }
 
 
-    //Mono
+
+
+    /*                  --- MONO ---                  */
+
     public Mono<String> nameMono() {
         return Mono.just("Almuhannad").log();
     }
@@ -143,8 +159,13 @@ public class FluxAndMonoGeneratorService {
         /*fluxAndMonoGeneratorService.namesFluxFlatMap(5).subscribe(
                 name -> System.out.println("FLATMAP OUTPUT HERE: " + name));*/
 
-        fluxAndMonoGeneratorService.namesFluxFlatMapAsync(1).subscribe(
-                name -> System.out.println("DELAYED FLATMAP OUTPUT HERE: " + name));
+        /*fluxAndMonoGeneratorService.namesFluxFlatMapAsync(1).subscribe(
+                name -> System.out.println("DELAYED FLATMAP OUTPUT HERE: " + name));*/
+
+        // concatMap
+        fluxAndMonoGeneratorService.namesFluxConcatMap(2).subscribe(
+                name -> System.out.println("concatMap with (same order): " + name)
+        );
 
     }
 
