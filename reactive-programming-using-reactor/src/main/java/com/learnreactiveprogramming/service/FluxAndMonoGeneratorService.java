@@ -1,6 +1,7 @@
 package com.learnreactiveprogramming.service;
 
 
+import org.w3c.dom.ls.LSOutput;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -140,14 +141,32 @@ public class FluxAndMonoGeneratorService {
 
 
     // flatmap in Mono
-    // used when the transformation returns a Mono
-    // for example, when you have a function that takes a String (1)  and returns a Mono<List<String>> (N)
+    // used when the transformation returns a Mono -- (1)
+    // for example, when you have a function that takes a String (1)  and returns a Mono<List<String>> (1 -- one list of <N> Strings, but treated as 1 Mono)
     public Mono<List<String>> nameMonoWithFlatMap() {
         return Mono.just("almuhannad")
                 .map(name -> name.toUpperCase())
                 .flatMap(s -> splitStringMono(s))
                 .log();
 
+    }
+
+
+    // flatMapMany operator
+    /*
+    * works similarly to flatMap, but used when transformation returns a Flux (N)
+    * for example, when you have a function that takes a String (1) and return a Flux<String> (N)
+    * remember, flatMapMany is a function that belongs to Mono, so that's why we are emitting a Mono here that returns a Flux<String>
+    * */
+    public Flux<String> nameMonoWithFlatMapMany(String name) {
+        return Mono.just(name)
+                .map(element -> element.toUpperCase())
+                /*.flatMapMany(element -> {
+                    String[] nameArray = element.split("");
+                    return fromArray(nameArray);
+                }) */
+                .flatMapMany(s -> splitNames(s)) // helper function defined in Flux section that returns a Flux<String>
+                .log();
     }
 
 
@@ -160,6 +179,7 @@ public class FluxAndMonoGeneratorService {
         return Mono.just(List.of(charArray))
                 .delayElement(Duration.ofSeconds(1));
     }
+
 
     /* ------------------------  MAIN FUNCTION FOR CONSOLE PRINTING  -------------------------------- */
 
@@ -205,13 +225,19 @@ public class FluxAndMonoGeneratorService {
                 name -> System.out.println("Mono with Map: " + name)
         );*/
 
-        // resorted to blocking the thread to print the result to console
-        //The block() method is used to wait for the Mono to complete and retrieve its value.
-        // This ensures that the main method waits for the asynchronous operation to complete.
-        List<String> printResult = fluxAndMonoGeneratorService.nameMonoWithFlatMap().block();
+        /*
+        resorted to blocking the thread to print the result to console
+        The block() method is used to wait for the Mono to complete and retrieve its value.
+        This ensures that the main method waits for the asynchronous operation to complete.
+        */
+        /*List<String> printResult = fluxAndMonoGeneratorService.nameMonoWithFlatMap().block();
         if (printResult != null) {
             printResult.forEach(System.out::println);
-        }
+        }*/
+
+        fluxAndMonoGeneratorService.nameMonoWithFlatMapMany("khalid").subscribe(
+                name -> System.out.println("flatMapMany returns a Flux here: " + name)
+        );
 
 
     }
