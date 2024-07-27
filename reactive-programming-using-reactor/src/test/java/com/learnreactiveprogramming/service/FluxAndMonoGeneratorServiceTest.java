@@ -106,7 +106,7 @@ class FluxAndMonoGeneratorServiceTest {
         var value = fluxAndMonoGeneratorService.nameMonoWithFlatMap();
         // fixed name in method --> almuhannad
         StepVerifier.create(value)
-                .expectNext(List.of("A","L","M","U","H","A", "N","N", "A", "D"))
+                .expectNext(List.of("A","L","M","U","H","A", "N","N", "A", "D")) // as one unit (list of Mono)
                 .verifyComplete();
     }
 
@@ -116,7 +116,18 @@ class FluxAndMonoGeneratorServiceTest {
         var test = fluxAndMonoGeneratorService.nameMonoWithFlatMapMany("alex");
 
         StepVerifier.create(test)
-                .expectNext("A", "L", "E", "X")
+                .expectNext("A", "L", "E", "X") // multiple emits (Flux)
                 .verifyComplete();
+    }
+    
+    @Test
+    void namesFluxTransform() {
+        
+        var test = fluxAndMonoGeneratorService.namesFluxTransform(3);
+        
+        StepVerifier.create(test)
+                .expectNext("A", "L", "E", "X", "C", "A", "E", "N")
+                .verifyComplete();
+        
     }
 }

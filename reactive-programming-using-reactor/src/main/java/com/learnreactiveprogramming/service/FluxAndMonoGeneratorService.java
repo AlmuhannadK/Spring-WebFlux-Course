@@ -8,15 +8,18 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Function;
 
 import static reactor.core.publisher.Flux.fromArray;
 import static reactor.core.publisher.Flux.never;
 
 public class FluxAndMonoGeneratorService {
-
-
+    
+    /* ------------------------  ----------------------------------  -------------------------------- */
     /* ------------------------  FLUX  -------------------------------- */
-
+    /* ------------------------  ----------------------------------  -------------------------------- */
+    
+    
     public Flux<String> namesFlux() {
 
         return Flux.fromIterable(List.of("Alex", "Ben", "Caeser")) // might come from a db or a remote service call
@@ -85,6 +88,20 @@ public class FluxAndMonoGeneratorService {
                 .concatMap(s -> splitNamesWithDelay(s))
                 .log();
     }
+    // USES FUNCTIONAL INTERFACE (TRANSFORM() OPERATOR)
+    public Flux<String> namesFluxTransform(int elementLength) {
+        
+        // defining our own Functional Interface because transform(fi) operator takes in a Functional Interface
+        // we moved the functionality of both operators(.map and .filter) and assigned it to a variable that holds their logic inside
+        // *****(basically Functional Interfaces extract functionality and assigns it to a variable)
+        Function <Flux<String>, Flux<String>> myFilterMap = name -> name.map(String :: toUpperCase)
+                .filter(element -> element.length() > elementLength);
+        
+        return Flux.fromIterable(List.of("alex", "ben", "caen"))
+                .transform(myFilterMap)
+                .flatMap(s -> splitNames(s))
+                .log();
+    }
 
 
                     /*HELPER FUNCTIONS FOR FLUX PART*/
@@ -122,12 +139,14 @@ public class FluxAndMonoGeneratorService {
         return fromArray(nameArray)
                 .delayElements(Duration.ofMillis(delay));
     }
-
-
-
-
+    
+    
+    
+    /* ------------------------  ----------------------------------  -------------------------------- */
     /* ------------------------  MONO  -------------------------------- */
-
+    /* ------------------------  ----------------------------------  -------------------------------- */
+    
+    
     public Mono<String> nameMono() {
         return Mono.just("almuhannad")
                 .log();
@@ -168,9 +187,7 @@ public class FluxAndMonoGeneratorService {
                 .flatMapMany(s -> splitNames(s)) // helper function defined in Flux section that returns a Flux<String>
                 .log();
     }
-
-
-
+    
 
 
     // HELPER METHODS
@@ -179,9 +196,13 @@ public class FluxAndMonoGeneratorService {
         return Mono.just(List.of(charArray))
                 .delayElement(Duration.ofSeconds(1));
     }
-
-
+    
+    
+    
+    
+    /* ------------------------  ----------------------------------  -------------------------------- */
     /* ------------------------  MAIN FUNCTION FOR CONSOLE PRINTING  -------------------------------- */
+    /* ------------------------  ----------------------------------  -------------------------------- */
 
     public static void main(String[] args) {
 
@@ -207,7 +228,8 @@ public class FluxAndMonoGeneratorService {
 
         fluxAndMonoGeneratorService.namesFluxFilter(3)
                 .subscribe(name ->
-                        System.out.println("Filtered name is: " + name));*/
+                        System.out.println("Filtered name is: " + name));
+      */
 
         // flatmap
         /*fluxAndMonoGeneratorService.namesFluxFlatMap(5).subscribe(
@@ -235,8 +257,12 @@ public class FluxAndMonoGeneratorService {
             printResult.forEach(System.out::println);
         }*/
 
-        fluxAndMonoGeneratorService.nameMonoWithFlatMapMany("khalid").subscribe(
+        /*fluxAndMonoGeneratorService.nameMonoWithFlatMapMany("khalid").subscribe(
                 name -> System.out.println("flatMapMany returns a Flux here: " + name)
+        );*/
+        
+        fluxAndMonoGeneratorService.namesFluxTransform(3).subscribe(
+                name -> System.out.println("Transform returns here ::" + name)
         );
 
 
