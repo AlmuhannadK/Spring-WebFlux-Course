@@ -97,12 +97,48 @@ public class FluxAndMonoGeneratorService {
         Function <Flux<String>, Flux<String>> myFilterMap = name -> name.map(String :: toUpperCase)
                 .filter(element -> element.length() > elementLength);
         
-        return Flux.fromIterable(List.of("alex", "ben", "caen"))
+        return Flux.fromIterable(List.of("alex", "ben", "caen", "alibouz"))
                 .transform(myFilterMap)
                 .flatMap(s -> splitNames(s))
                 .log();
     }
 
+                            // DefaultIfEmpty (RETURNS A DEFAULT VALUE -- SINGULAR)
+    //THE MAIN IDEA:
+    // HERE, WE CAN FALL BACK TO A DEFAULT VALUE IF THE SOURCE OF DATA DOESN'T RETURN OR EMIT AN EVENT
+    // SUCH AS ONNEXT(SOMETHING). WE CAN EMIT A DEFAULT VALUE OF THE SAME TYPE THAT WE ARE RETURNING
+    public Flux<String> namesFluxTransform_DefaultIfEmpty(int elementLength) {
+  
+        Function <Flux<String>, Flux<String>> myFilterMap = name -> name.map(String :: toUpperCase)
+                .filter(element -> element.length() > elementLength);
+        
+        return Flux.fromIterable(List.of("alex", "ben", "caen", "alibouz"))
+                .transform(myFilterMap)
+                .flatMap(s -> splitNames(s))
+                .defaultIfEmpty("default")
+                .log();
+    }
+    
+                    // SwitchIfEmpty (RETURNS A DEFALUT PUBLISHER -- STREAM(MONO OR FLUX)
+    // accepts a publisher (flux or a mono) to switch the stream do instead of returning the default data type like defaultifempty
+                    public Flux<String> namesFluxTransform_SwitchIfEmpty(int elementLength) {
+                        
+                        Function <Flux<String>, Flux<String>> myFilterMap = name ->
+                                name.map(String :: toUpperCase)
+                                .filter(element -> element.length() > elementLength)
+                                .flatMap(this::splitNames);
+                        
+                        
+                        // this is the publisher we switch to
+                        var myDefaultPublisher = Flux.just("this is the default stream - publisher");
+                              //  .transform(myFilterMap);
+                        
+                        return Flux.fromIterable(List.of("alex", "ben", "caen", "alibouz"))
+                                .transform(myFilterMap)
+                                .switchIfEmpty(myDefaultPublisher)
+                                .log();
+                    }
+    
 
                     /*HELPER FUNCTIONS FOR FLUX PART*/
 

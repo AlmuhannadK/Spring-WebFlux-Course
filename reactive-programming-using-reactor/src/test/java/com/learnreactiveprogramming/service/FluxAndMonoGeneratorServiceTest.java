@@ -130,4 +130,38 @@ class FluxAndMonoGeneratorServiceTest {
                 .verifyComplete();
         
     }
+    
+    
+    @Test
+    void namesFluxTransform_DefaultAndSwitchIfEmpty() {
+        
+        var test = fluxAndMonoGeneratorService.namesFluxTransform(9);
+        
+        StepVerifier.create(test)
+                .expectNext("A", "L", "I", "B", "O", "U", "Z")
+                .verifyComplete();
+    }
+    
+    @Test
+    void testNamesFluxTransform_DefaultIfEmpty() {
+        // similar to the above test, but we already know that the condition will not be met (more than 49 chars!)
+        // so, we emit the default string (our return type) which is simply "default"
+        var test = fluxAndMonoGeneratorService.namesFluxTransform_DefaultIfEmpty(49);
+        StepVerifier.create(test)
+                .expectNext("default")
+                .verifyComplete();
+    }
+    
+    @Test
+    void namesFluxTransform_SwitchIfEmpty() {
+        // similar to the default if empty, but instead of returning a simple default value of the same data type of
+        // our return type, we return a publisher (flux or mono) if the stream is not returning a value
+        // so we switch (divert) to a different stream
+        var test = fluxAndMonoGeneratorService.namesFluxTransform_SwitchIfEmpty(8);
+        
+        StepVerifier.create(test)
+                .expectNext("this is the default stream - publisher")
+                .verifyComplete();
+    
+    }
 }
