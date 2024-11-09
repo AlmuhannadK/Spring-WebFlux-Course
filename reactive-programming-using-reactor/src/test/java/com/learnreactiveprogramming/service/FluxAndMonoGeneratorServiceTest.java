@@ -8,9 +8,7 @@ import java.util.List;
 
 class FluxAndMonoGeneratorServiceTest {
 
-
-    // REACTOR UNIT TESTING
-
+    
     FluxAndMonoGeneratorService fluxAndMonoGeneratorService = new FluxAndMonoGeneratorService();
 
 
@@ -163,5 +161,47 @@ class FluxAndMonoGeneratorServiceTest {
                 .expectNext("this is the default stream - publisher")
                 .verifyComplete();
     
+    }
+    
+    @Test
+    void explore_concat() {
+        
+        var test = fluxAndMonoGeneratorService.explore_concat();
+        
+        StepVerifier.create(test)
+                .expectNext("A", "B", "C", "D", "E", "F", "G", "H")
+                .verifyComplete();
+        
+    }
+    
+    @Test
+    void explore_concat_mono() {
+        // subscribe to first, complete, then subscribe to second and complete
+        var test = fluxAndMonoGeneratorService.explore_concat_mono();
+        
+        StepVerifier.create(test)
+                .expectNext("A", "B")
+                .verifyComplete();
+        
+    }
+    
+    @Test
+    void explore_merge() {
+        // simultaneously subscribed to both streams
+        var test = fluxAndMonoGeneratorService.explore_merge();
+        StepVerifier.create(test)
+                .expectNext("Almuhannad", "Ada", "Khalid", "Boe", "Almhari", "Charlie")
+                .verifyComplete();
+        
+    }
+    
+    @Test
+    void explore_mergeWith_mono() {
+        
+        var test = fluxAndMonoGeneratorService.explore_mergeWith_mono();
+        
+        StepVerifier.create(test)
+                .expectNext("Almuhannad", "Ada")
+                .verifyComplete();
     }
 }

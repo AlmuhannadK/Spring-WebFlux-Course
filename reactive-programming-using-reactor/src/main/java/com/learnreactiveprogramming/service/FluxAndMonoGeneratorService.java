@@ -1,6 +1,7 @@
 package com.learnreactiveprogramming.service;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.ls.LSOutput;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -10,9 +11,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
 
-import static reactor.core.publisher.Flux.fromArray;
-import static reactor.core.publisher.Flux.never;
-
+import static reactor.core.publisher.Flux.*;
+@Slf4j
 public class FluxAndMonoGeneratorService {
     
     /* ------------------------  ----------------------------------  -------------------------------- */
@@ -234,6 +234,103 @@ public class FluxAndMonoGeneratorService {
     }
     
     
+    /*
+    //////////// COMBINING DIFFERENT STREAMS INTO ONE WITH:
+     CONCAT, MERGE, AND ZIP OPERATORS ////////////
+     */
+    
+    /*
+    concat() & concatWith() operators
+    Example: let's say that our app is contacting two external services (APIs)
+    the first API will return --> A B C
+    the second API will return --> E F G
+    then with the help of concat and concatWith operators, we can combine the results
+    into a single stream like this --> A B C D E F G
+    
+    **Note: the concatination of Reactive Streams happens in a sequence
+    - the first stream is subscribed first and completes
+    - the second stream waits for the onComplete signal from the first then subscribed and completes
+    
+    -- "concat()" - static method in FLUX
+    -- "concatWith()" - instance method in FLUX and MONO
+    
+    // both operators work similarly
+     */
+    
+    public Flux<String> explore_concat() {
+        // concat this flux with a mono stream
+        var firstStream =  Flux.just("A", "B", "C").concatWith(Mono.just("D"));
+        // same as first
+        var secondStream = Flux.just("E", "F", "G").concatWith(Mono.just("H"));
+        
+        // concat both streams (fluxes) into a single flux stream
+        return Flux.concat(firstStream, secondStream);
+    }
+    
+    
+    public Flux<String> explore_concat_mono() {
+        
+        Mono<String> firstStream = Mono.just("A");
+        
+        Mono<String> secondStream = Mono.just("B");
+        
+        // Return a Flux of both Mono streams concatination
+        return firstStream.concatWith(secondStream).log();
+    }
+    
+    
+    /*
+    "merge() && mergeWith()" operators
+    - both the publishers are subscribed at the same time (unlike concat which is sequential)
+        -- publishers are subscribed eagerly and the merge happens in an interleaved fashion (combined into one)
+        
+    - merge() - static method in Flux
+    - mergeWith() - instance method in Flux and Mono
+    
+    **note: both operators work similarly
+     */
+    
+    public Flux<String> explore_merge() {
+        
+        // delaying to demonstrate the simultaneous subscription to both streams
+        var firstStream = Flux.just("Almuhannad", "Khalid", "Almhari")
+                .delayElements(Duration.ofMillis(100));
+              
+        
+        var secondStream = Flux.just("Ada", "Boe", "Charlie")
+                .delayElements(Duration.ofMillis(125));
+        
+        //emitted values --> almuhannad, ada, khalid, boe, ... etc
+        
+        return Flux.merge(firstStream, secondStream).log();
+        //similarly ...
+        // OR -->  firstStream.mergeWith(secondStream);
+    }
+    
+    public Flux<String> explore_mergeWith() {
+        
+        // delaying to demonstrate the simultaneous subscription to both streams
+        var firstStream = Flux.just("Almuhannad", "Khalid", "Almhari")
+                .delayElements(Duration.ofMillis(100));
+        
+        
+        var secondStream = Flux.just("Ada", "Boe", "Charlie")
+                .delayElements(Duration.ofMillis(125));
+        
+        return firstStream.mergeWith(secondStream).log();
+    }
+    
+    // demonstrating with Mono and using the instance method mergeWith
+    // ** (which works with Mono and Flux)
+    public Flux<String> explore_mergeWith_mono() {
+        
+        // delaying to demonstrate the simultaneous subscription to both streams
+        var firstStream = Mono.just("Almuhannad");
+        
+        var secondStream = Mono.just("Ada");
+        
+        return firstStream.mergeWith(secondStream).log();
+    }
     
     
     /* ------------------------  ----------------------------------  -------------------------------- */
@@ -297,9 +394,17 @@ public class FluxAndMonoGeneratorService {
                 name -> System.out.println("flatMapMany returns a Flux here: " + name)
         );*/
         
-        fluxAndMonoGeneratorService.namesFluxTransform(3).subscribe(
+        /*fluxAndMonoGeneratorService.namesFluxTransform(3).subscribe(
                 name -> System.out.println("Transform returns here ::" + name)
-        );
+        );*/
+        
+       /* fluxAndMonoGeneratorService.explore_concat().subscribe(
+                result -> System.out.println("this is the result of concat --> " + result)
+        );*/
+        
+        fluxAndMonoGeneratorService.explore_merge().subscribe(
+                result -> System.out.println("here's the eager merge --> "+ result)
+                );
 
 
     }
