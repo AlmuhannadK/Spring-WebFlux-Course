@@ -353,17 +353,71 @@ public class FluxAndMonoGeneratorService {
      */
     
     public Flux<String> explore_mergeSequential() {
-        // delay A, delay B, ...
+        // delay 400 A, delay B, ...
         var firstStream = Flux.just("A", "B", "C")
                 .delayElements(Duration.ofMillis(400));
-        // (after 1st stream) delay 800 X, delay Y, ...
+        // (after 1st stream) delay 100 X, delay Y, ...
         var secondStream = Flux.just("X", "Y", "Z")
-                .delayElements(Duration.ofMillis(800));
+                .delayElements(Duration.ofMillis(100));
         
         //in a normal merge(), both streams are interleaved/mixed, but here it's sequential
         return Flux.mergeSequential(firstStream, secondStream).log();
     }
     
+    /*
+    The zip() && zipWith() operators
+    
+    -- zips two publishers together into one stream
+    - the zip operator accepts 3 main arguments
+                // source flux(es)          // combinator lambda (how we wish to combine the two)
+        Flux.zip(1st publisher, 2nd publisher (, ...), (first, second) -> first + second);
+        
+        **Notes:
+        zip()
+        - zip is a static method that is part of the flux
+        - zip can be used to merge up-to 2 to 8 (!) publishers (Mono or Flux) into one stream
+    
+        zipWith()
+        - instance method that is part of Flux and Mono
+        - can be used to merge 2 publishers together
+        ********
+        
+        - publishers are subscribed to EAGERLY to publishers
+        - waits for all the publishers involved in the transformation to emit one element (each one must emit something)
+            - continues until one publisher sends an onComplete event
+            
+         - For Mono, it will return a MONO unlike the other operators which transform
+         Monos to Flux
+     */
+    
+    public Flux<String> explore_zip() {
+        var firstStream = Flux.just("A", "B", "C");
+        var secondStream = Flux.just("X", "Y", "Z");
+        var thirdStream = Flux.just("J", "K", "L");
+        var fourthStream = Flux.just("Q", "R", "S");
+                            // publishers (4)
+        
+        // for .zipWith, we can do it like this:
+        // firstStream.zipWith(....) ... etc since it's an instance method
+        return Flux.zip(firstStream, secondStream, thirdStream, fourthStream)
+                // combinator lambda (with more than 2, need to make lambda after like this
+                .map(t4 -> t4.getT1().toLowerCase() + t4.getT2().toLowerCase()
+                + t4.getT3().toLowerCase() + t4.getT4().toLowerCase())
+                .log();
+    }
+    
+    public Mono<String> explore_zip_mine() {
+        var firstStream = Mono.just("first");
+        var secondStream = Mono.just("second");
+        var thirdStream = Mono.just("third");
+        var fourthStream = Mono.just("fourth");
+        // publishers (4)
+        return Mono.zip(firstStream, secondStream, thirdStream, fourthStream)
+                // combinator lambda
+                .map(t4 -> t4.getT1().toUpperCase() + t4.getT2().toUpperCase()
+                        + t4.getT3().toUpperCase() + " MONO don't forget " + t4.getT4().toUpperCase())
+                .log();
+    }
     
     /* ------------------------  ----------------------------------  -------------------------------- */
     /* ------------------------  MAIN FUNCTION FOR CONSOLE PRINTING  -------------------------------- */
@@ -438,9 +492,18 @@ public class FluxAndMonoGeneratorService {
 //                result -> System.out.println("here's the eager merge --> "+ result)
 //                );
 
-        fluxAndMonoGeneratorService.explore_mergeSequential().subscribe(
-                result -> log.info("SEQUENTIAL MERGE --> " + result));
+//        fluxAndMonoGeneratorService.explore_mergeSequential().subscribe(
+//                result -> log.info("SEQUENTIAL MERGE --> " + result));
 
+//        fluxAndMonoGeneratorService.explore_zip().subscribe(
+//                result -> System.out.println("zip operator result from publishers => " + result)
+//        );
+        
+        fluxAndMonoGeneratorService.explore_zip_mine().subscribe(
+                result -> System.out.println(result)
+        );
+        
+        
     }
 
 

@@ -215,4 +215,15 @@ class FluxAndMonoGeneratorServiceTest {
                 .verifyComplete();
         
     }
+    
+    @Test
+    void explore_zip() {
+        
+        var test = fluxAndMonoGeneratorService.explore_zip();
+        
+        StepVerifier.create(test)
+                .expectNext("axjq", "bykr", "czls")
+                .verifyComplete();
+        
+    }
 }
