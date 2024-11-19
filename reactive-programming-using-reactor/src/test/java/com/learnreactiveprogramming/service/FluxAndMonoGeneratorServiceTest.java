@@ -204,4 +204,15 @@ class FluxAndMonoGeneratorServiceTest {
                 .expectNext("Almuhannad", "Ada")
                 .verifyComplete();
     }
+    
+    @Test
+    void explore_mergeSequential() {
+        
+        var test = fluxAndMonoGeneratorService.explore_mergeSequential();
+        
+        StepVerifier.create(test)
+                .expectNext("A", "B", "C", "X", "Y", "Z")
+                .verifyComplete();
+        
+    }
 }

@@ -40,6 +40,7 @@ public class FluxAndMonoGeneratorService {
         var names = Flux.fromIterable(List.of("aaa", "bbb", "ccc"));
 
         // if we return here, the stream will be transformed to upper case
+        //immutable stream
         names.map(name -> name.toUpperCase());
 
         // if we return here, nothing will happen to the stream as changes will be dropped
@@ -76,6 +77,9 @@ public class FluxAndMonoGeneratorService {
                 .log();
     }
 
+    // concat --> meaning it will be sequential
+    // map --> meaning it will be like flatmap
+    // so, concatmap --> sequential flatmap
 
     // concatMap is similar to flatMap, but it PRESERVES the order of elements unlike flatMap (keeps same order)
     // overall time will be higher than the flatmap operator because it keeps the order and needs each element
@@ -107,6 +111,10 @@ public class FluxAndMonoGeneratorService {
     //THE MAIN IDEA:
     // HERE, WE CAN FALL BACK TO A DEFAULT VALUE IF THE SOURCE OF DATA DOESN'T RETURN OR EMIT AN EVENT
     // SUCH AS ONNEXT(SOMETHING). WE CAN EMIT A DEFAULT VALUE OF THE SAME TYPE THAT WE ARE RETURNING
+    
+    //so:
+    // defaultIfEmpty --> returns a default value
+    // switchIfEmpty --> returns a "default" stream (alternative stream)
     public Flux<String> namesFluxTransform_DefaultIfEmpty(int elementLength) {
   
         Function <Flux<String>, Flux<String>> myFilterMap = name -> name.map(String :: toUpperCase)
@@ -208,6 +216,10 @@ public class FluxAndMonoGeneratorService {
 
 
     // flatMapMany operator
+    
+    // flatMap --> like flatmap
+    // many --> returns (N) or many
+    // so, flatMapMany --> flatmap that returns a Flux
     /*
     * works similarly to flatMap, but used when transformation returns a Flux (N)
     * for example, when you have a function that takes a String (1) and return a Flux<String> (N)
@@ -234,10 +246,9 @@ public class FluxAndMonoGeneratorService {
     }
     
     
-    /*
-    //////////// COMBINING DIFFERENT STREAMS INTO ONE WITH:
-     CONCAT, MERGE, AND ZIP OPERATORS ////////////
-     */
+    /* ------------------------  ----------------------------------  ------------------------------*/
+    /* ----------- COMBINING DIFFERENT STREAMS INTO ONE WITH: CONCAT, MERGE, AND ZIP OPERATORS  */
+    /* ------------------------  ----------------------------------  ----------------------------- */
     
     /*
     concat() & concatWith() operators
@@ -274,7 +285,7 @@ public class FluxAndMonoGeneratorService {
         
         Mono<String> secondStream = Mono.just("B");
         
-        // Return a Flux of both Mono streams concatination
+        // Return a Flux of both Mono streams concatenation
         return firstStream.concatWith(secondStream).log();
     }
     
@@ -282,7 +293,8 @@ public class FluxAndMonoGeneratorService {
     /*
     "merge() && mergeWith()" operators
     - both the publishers are subscribed at the same time (unlike concat which is sequential)
-        -- publishers are subscribed eagerly and the merge happens in an interleaved fashion (combined into one)
+        -- publishers are subscribed eagerly and the merge happens in an interleaved fashion
+        (combined into one) with no order
         
     - merge() - static method in Flux
     - mergeWith() - instance method in Flux and Mono
@@ -330,6 +342,26 @@ public class FluxAndMonoGeneratorService {
         var secondStream = Mono.just("Ada");
         
         return firstStream.mergeWith(secondStream).log();
+    }
+    
+    /*
+     The "mergeSequential()" operator
+     [SEQUENTIAL LIKE CONCAT, AND EAGER LIKE MERGE == mergeSequential]
+     -- similar to the merge() operator where both the publishers are subscribed to at the same
+     time eagerly. However, even though subscription happens eagerly, the merge of two streams
+     happens in a SEQUENCE
+     */
+    
+    public Flux<String> explore_mergeSequential() {
+        // delay A, delay B, ...
+        var firstStream = Flux.just("A", "B", "C")
+                .delayElements(Duration.ofMillis(400));
+        // (after 1st stream) delay 800 X, delay Y, ...
+        var secondStream = Flux.just("X", "Y", "Z")
+                .delayElements(Duration.ofMillis(800));
+        
+        //in a normal merge(), both streams are interleaved/mixed, but here it's sequential
+        return Flux.mergeSequential(firstStream, secondStream).log();
     }
     
     
@@ -402,10 +434,12 @@ public class FluxAndMonoGeneratorService {
                 result -> System.out.println("this is the result of concat --> " + result)
         );*/
         
-        fluxAndMonoGeneratorService.explore_merge().subscribe(
-                result -> System.out.println("here's the eager merge --> "+ result)
-                );
+//        fluxAndMonoGeneratorService.explore_merge().subscribe(
+//                result -> System.out.println("here's the eager merge --> "+ result)
+//                );
 
+        fluxAndMonoGeneratorService.explore_mergeSequential().subscribe(
+                result -> log.info("SEQUENTIAL MERGE --> " + result));
 
     }
 
